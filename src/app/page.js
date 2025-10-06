@@ -22,8 +22,8 @@
 // }
 
 //perfecto till noww
-import Hero from '@/components/Hero';
-import Header from '@/components/Header';
+//import Hero from '@/components/Hero';
+//import Header from '@/components/Header';
 
 import Image from "next/image";
 
@@ -31,7 +31,7 @@ import { Winky_Sans } from "next/font/google";
 
 const winky = Winky_Sans({
   subsets: ["latin"],
-  weight: ["400", "700"], // choose your weights
+  weight: ["400", "700"],
 });
 
 export default function Page() {

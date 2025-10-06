@@ -4,7 +4,7 @@ import Member from '@/models/Member';
 export async function POST(req) {
   try {
     await connectToDB();
-    const { token, answers } = await req.json();
+    const { token } = await req.json();
     if (!token) return new Response(JSON.stringify({ error: 'token missing' }), { status: 400 });
 
     const member = await Member.findOne({
