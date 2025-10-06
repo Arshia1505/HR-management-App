@@ -1,4 +1,3 @@
-// src/components/CsvUpload.jsx
 'use client';
 import Papa from 'papaparse';
 

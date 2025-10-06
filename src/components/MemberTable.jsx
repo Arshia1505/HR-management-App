@@ -1,4 +1,3 @@
-// components/MemberTable.jsx
 'use client';
 
 export default function MemberTable({ members = [], onExport }) {
@@ -10,8 +9,13 @@ export default function MemberTable({ members = [], onExport }) {
           <button onClick={onExport} className="px-3 py-2 border rounded hover:bg-gray-100 transition">
             Export CSV
           </button>
+
           <a href="/add" className="px-3 py-2 bg-black text-white rounded hover:bg-gray-800 transition">
             Add New
+          </a>
+
+          <a href="/warning" className="px-3 py-2 bg-black text-white rounded hover:bg-gray-800 transition">
+            Send Warning
           </a>
         </div>
       </div>

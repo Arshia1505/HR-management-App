@@ -37,6 +37,9 @@
 //     </div>
 //   );
 // }
+
+//=====================================
+
 'use client';
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
@@ -58,7 +61,7 @@ export default function Dashboard() {
     fetchMembers();
   }, []);
 
-  // Filtered members
+  // //Filtered members
   const filteredMembers = members.filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase()) || m.email.toLowerCase().includes(search.toLowerCase());
     const matchesYear = yearFilter === 'all' || new Date(m.created_at).getFullYear() === +yearFilter;

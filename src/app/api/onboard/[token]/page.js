@@ -1,4 +1,3 @@
-// src/app/onboard/[token]/page.js
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';

@@ -1,4 +1,3 @@
-// src/app/api/bulk-add-members/route.js
 import { connectToDB } from '@/lib/mongoose';
 import Member from '@/models/Member';
 
