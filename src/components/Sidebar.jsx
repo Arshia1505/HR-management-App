@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 export default function Sidebar() {
   return (
     <aside className="w-64 bg-white h-screen border-r hidden md:flex flex-col justify-between sticky top-0">
@@ -13,7 +15,13 @@ export default function Sidebar() {
                 item === 'Employee' ? 'bg-gray-50 font-medium' : 'hover:bg-gray-100'
               }`}
             >
-              {item}
+              {item === 'Home' ? (
+                <Link href="/" className="block w-full h-full">
+                  {item}
+                </Link>
+              ) : (
+                item
+              )}
             </li>
           ))}
         </ul>
