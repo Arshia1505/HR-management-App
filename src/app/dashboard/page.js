@@ -407,44 +407,114 @@ export default function DashboardPage() {
     reader.readAsText(file);
   }
 
-async function sendWarningEmails(teamId) {
+// async function sendWarningEmails(teamId) {
+//   const team = teams.find(t => t.id === teamId);
+//   if (!team || !team.members.length) return setAlert({ type: 'error', message: 'No members to email' });
+//   if (!confirm(`Send warning email to ${team.members.length} members of ${team.name}?`)) return;
+
+//   try {
+//     const res = await fetch('/api/send-warning', {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({
+//         emails: team.members.map(m => m.email),
+//         subject: `Warning from ${team.name} Team`,
+//         message: `Dear team member, this is an important warning from the ${team.name} team.`,
+//       }),
+//     });
+//     const data = await res.json();
+//     if (!data.success) {
+//       setAlert({ type: 'error', message: `Email API error: ${data.error || 'unknown'}` });
+//       console.error('send-warning error:', data);
+//       return;
+//     }
+
+//     const { accepted, failed, results } = data;
+//     // show summary
+//     setAlert({ type: failed === 0 ? 'success' : 'error', message: `Emails: ${accepted} sent, ${failed} failed` });
+
+//     // optionally log details to console and show first few errors in UI
+//     const failedDetails = results.filter(r => !r.success).slice(0, 5);
+//     if (failedDetails.length) {
+//       console.error('Failed recipients:', failedDetails);
+//       // You could show a modal or expanded UI with the failedDetails
+//     }
+
+//   } catch (err) {
+//     console.error('Network/send error:', err);
+//     setAlert({ type: 'error', message: `Network error: ${err.message}` });
+//   }
+// }
+
+// inside src/app/dashboard/page.js (only replace this function)
+async function sendWarningEmails(teamId, emails = null) {
   const team = teams.find(t => t.id === teamId);
-  if (!team || !team.members.length) return setAlert({ type: 'error', message: 'No members to email' });
-  if (!confirm(`Send warning email to ${team.members.length} members of ${team.name}?`)) return;
+  if (!team) return setAlert({ type: 'error', message: 'Team not found' });
+
+  // if caller gave explicit emails, use them; otherwise send to whole team
+  const targets = Array.isArray(emails) && emails.length
+    ? emails
+    : (team.members || []).map(m => m.email).filter(Boolean);
+
+  if (!targets.length) return setAlert({ type: 'error', message: 'No recipients to email' });
+
+  if (!confirm(`Send warning email to ${targets.length} members of ${team.name}?`)) return;
 
   try {
     const res = await fetch('/api/send-warning', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        emails: team.members.map(m => m.email),
+        emails: targets,
         subject: `Warning from ${team.name} Team`,
-        message: `Dear team member, this is an important warning from the ${team.name} team.`,
+        message: `Dear team member,\n\nThis is an important warning from the ${team.name} team.\n\nRegards,\nHR`,
       }),
     });
+
     const data = await res.json();
-    if (!data.success) {
-      setAlert({ type: 'error', message: `Email API error: ${data.error || 'unknown'}` });
-      console.error('send-warning error:', data);
-      return;
+    if (!res.ok || data.success === false) {
+      setAlert({ type: 'error', message: `Email failed: ${data.error || 'server error'}` });
+    } else {
+      setAlert({ type: data.failed && data.failed > 0 ? 'error' : 'success', message: `Emails: ${data.accepted} sent, ${data.failed} failed` });
     }
-
-    const { accepted, failed, results } = data;
-    // show summary
-    setAlert({ type: failed === 0 ? 'success' : 'error', message: `Emails: ${accepted} sent, ${failed} failed` });
-
-    // optionally log details to console and show first few errors in UI
-    const failedDetails = results.filter(r => !r.success).slice(0, 5);
-    if (failedDetails.length) {
-      console.error('Failed recipients:', failedDetails);
-      // You could show a modal or expanded UI with the failedDetails
-    }
-
   } catch (err) {
-    console.error('Network/send error:', err);
+    console.error(err);
     setAlert({ type: 'error', message: `Network error: ${err.message}` });
   }
 }
+
+// inside src/app/dashboard/page.js
+
+async function removeMemberFromTeam(teamId, memberId) {
+  // optimistic UI update: remove in client state first
+  setTeams(prev => prev.map(t => {
+    if (t.id !== teamId) return t;
+    return { ...t, members: t.members.filter(m => m.id !== memberId) };
+  }));
+
+  // call backend to persist deletion (optional)
+  try {
+    const res = await fetch('/api/remove-member', {
+      method: 'POST', // using POST for wide compatibility; change to DELETE if you prefer
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teamId, memberId }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.success === false) {
+      // rollback if necessary
+      setAlert({ type: 'error', message: `Remove failed: ${data.error || 'server error'}` });
+      // re-fetch or rollback client state if you have the original saved; simplest: reload teams from server
+      // (optional) you could re-add removed member to client state here if you preserved it
+    } else {
+      setAlert({ type: 'success', message: 'Member removed' });
+    }
+  } catch (err) {
+    console.error('Remove API error', err);
+    setAlert({ type: 'error', message: 'Network error while removing member' });
+  }
+}
+
+
 
 
 
@@ -485,6 +555,7 @@ async function sendWarningEmails(teamId) {
               team={team}
               onOpen={openTeam}
               onSendWarnings={sendWarningEmails}
+               onRemoveMember={removeMemberFromTeam}
             />
           ))}
         </div>
